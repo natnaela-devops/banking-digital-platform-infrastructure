@@ -1,12 +1,13 @@
 # Banking Digital Platform Infrastructure
 
-Sanitized case study of hands-on DevOps/SRE work across **UAT and production banking environments**. The platform combined Kubernetes and VM-hosted services for application delivery, identity, messaging, caching, databases, storage, observability, artifact management, and secure edge routing.
+Sanitized case study of hands-on DevOps/SRE work across **UAT and production banking environments**. The platform combined Kubernetes and VM-hosted services for application delivery, identity, messaging, caching, databases, storage, observability, artifact management, secure edge routing, and GitOps-based delivery.
 
 > Customer names, internal IPs, domains, credentials, private certificates, cluster identifiers, proprietary application names, and production data are intentionally excluded. The architecture is generalized from real operational work rather than copied from a customer environment.
 
 ## What this demonstrates
 
 - operating **RKE2 + Rancher** environments with Longhorn-backed workloads
+- implementing and troubleshooting **CI/CD + GitOps delivery** across application repositories, Docker builds, private Harbor registry, shared Helm charts, environment values, Argo CD ApplicationSets, and RKE2 rollouts
 - managing **Harbor** image delivery and Kubernetes image-pull configuration
 - operating multi-node **Kafka/KRaft** and migrating application traffic from legacy PLAINTEXT access to **mTLS**
 - operating **Redis Cluster + Predixy** with application authentication and cluster-aware routing
@@ -16,12 +17,19 @@ Sanitized case study of hands-on DevOps/SRE work across **UAT and production ban
 - supporting **SeaweedFS** for receipt/image storage and **PM2**-managed frontend processes
 - implementing and operating **OpenSearch**, **Prometheus**, **Alertmanager**, and application telemetry workflows
 - investigating platform incidents across the Linux block/filesystem layer, Longhorn, containerd, kubelet, embedded etcd, RKE2, and Rancher rather than treating Kubernetes errors in isolation
-- validating changes from UAT through production using backups, rollback plans, rolling changes, runtime verification, and business-flow checks
+- validating changes from UAT through production using merge gates, backups, rollback plans, rolling changes, runtime verification, and business-flow checks
 
 ## Architecture
 
 ```mermaid
 flowchart TB
+    Dev[Developer / Merge Request] --> CI[CI Build / Test / Image Build]
+    CI --> Harbor[Harbor Registry]
+    CI --> GitOps[GitOps Repository]
+    GitOps --> Argo[Argo CD / ApplicationSets]
+    Argo --> K8s[RKE2 + Rancher]
+    Harbor --> K8s
+
     Users[Mobile / Web / Merchant Users] --> Edge[Nginx TLS / Reverse Proxy]
 
     Edge --> Gateway[Application Gateways / APIs]
@@ -37,7 +45,6 @@ flowchart TB
     end
 
     Gateway --> Apps
-    Harbor[Harbor Registry] --> K8s
 
     Apps --> Kafka[Kafka KRaft Cluster]
     Apps --> Predixy[Predixy]
@@ -61,15 +68,24 @@ The exact placement and sizing differed between UAT and production. This diagram
 ## Start here
 
 1. [Architecture and service relationships](docs/architecture.md)
-2. [UAT to production workflow](docs/uat-to-production.md)
-3. [Networking, Nginx, and TLS](docs/networking-nginx.md)
-4. [Identity and Keycloak](docs/identity-keycloak.md)
-5. [Messaging and cache: Kafka + Redis/Predixy](docs/messaging-cache.md)
-6. [Databases and storage](docs/databases-storage.md)
-7. [Observability and alerting](docs/observability.md)
-8. [Operations, troubleshooting, and recovery](docs/operations-recovery.md)
+2. [CI/CD and GitOps delivery](docs/ci-cd-gitops.md)
+3. [UAT to production workflow](docs/uat-to-production.md)
+4. [Networking, Nginx, and TLS](docs/networking-nginx.md)
+5. [Identity and Keycloak](docs/identity-keycloak.md)
+6. [Messaging and cache: Kafka + Redis/Predixy](docs/messaging-cache.md)
+7. [Databases and storage](docs/databases-storage.md)
+8. [Observability and alerting](docs/observability.md)
+9. [Operations, troubleshooting, and recovery](docs/operations-recovery.md)
 
 ## Selected operational examples
+
+### CI/CD and GitOps deployment flow
+
+A representative banking-service delivery path used merge-based CI controls rather than deploying on every push. Merge requests performed build/test validation; deployment-approved merges produced a versioned container image, pushed it to a private Harbor registry, updated the GitOps desired state, and allowed Argo CD to reconcile the change into RKE2.
+
+The GitOps repository used a **shared Helm service chart** with per-service and per-environment values, while **ApplicationSets** generated environment-specific Argo CD Applications. Troubleshooting treated each delivery boundary independently: source merge, CI result, image availability, GitOps revision, Argo sync/health, image pull, pod readiness, Service endpoints, runtime configuration, and end-to-end application behavior.
+
+See [CI/CD and GitOps Delivery](docs/ci-cd-gitops.md) for the full sanitized workflow.
 
 ### Storage-driven RKE2 control-plane incident
 
@@ -109,6 +125,8 @@ A typical production change followed this pattern:
 8. keep the previous path temporarily when staged migration reduces risk
 9. retire legacy configuration only after consumers are confirmed migrated
 
+For application delivery, the preferred path was **source control -> CI validation -> versioned image -> Harbor -> GitOps desired state -> Argo CD reconciliation -> RKE2 runtime verification**, rather than treating manual cluster edits as the normal deployment mechanism.
+
 ## Supporting evidence
 
 Detailed sanitized troubleshooting procedures are maintained in [DevOps Troubleshooting Runbooks](https://github.com/natnaela-devops/devops-troubleshooting-runbooks), including RKE2, Linux, Kafka/KRaft mTLS, Redis/Predixy, databases, Java/WildFly, networking, Longhorn, Harbor, OpenSearch, Prometheus, and recovery workflows.
@@ -122,6 +140,7 @@ This repository documents engineering scope and methods without exposing custome
 - passwords, tokens, private keys, certificates, or keystores
 - proprietary application source code or business data
 - exact production sizing and capacity values
+- private Git server and registry hostnames
 - uptime, transaction-volume, or performance claims that were not independently measured
 - definitive upstream root-cause claims when the available evidence proves only the failure mechanism
 
