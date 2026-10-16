@@ -15,6 +15,7 @@ Sanitized case study of hands-on DevOps/SRE work across **UAT and production ban
 - configuring **Nginx** for TLS termination, reverse proxying, secure application domains, APIs, WebViews, merchant/backoffice portals, receipt/evidence routes, and identity endpoints
 - supporting **SeaweedFS** for receipt/image storage and **PM2**-managed frontend processes
 - implementing and operating **OpenSearch**, **Prometheus**, **Alertmanager**, and application telemetry workflows
+- investigating platform incidents across the Linux block/filesystem layer, Longhorn, containerd, kubelet, embedded etcd, RKE2, and Rancher rather than treating Kubernetes errors in isolation
 - validating changes from UAT through production using backups, rollback plans, rolling changes, runtime verification, and business-flow checks
 
 ## Architecture
@@ -70,6 +71,14 @@ The exact placement and sizing differed between UAT and production. This diagram
 
 ## Selected operational examples
 
+### Storage-driven RKE2 control-plane incident
+
+A Rancher/RKE2 outage was investigated from the host upward rather than assuming Kubernetes or etcd corruption. Evidence collection covered local API availability, `rke2-server` restart history, embedded etcd state, container runtime access, kernel block-device errors, filesystem write failures, Longhorn volume health, replica state, and node disk schedulability.
+
+The important operational conclusion was deliberately narrow: **host/block-storage I/O degradation was confirmed as the failure mechanism affecting the control plane**, while the upstream trigger remained unproven pending infrastructure-side investigation. This prevented a speculative RCA and avoided destructive etcd or Longhorn recovery actions without evidence.
+
+The reusable procedure is documented in [RKE2 Control-Plane Degradation from Disk I/O Pressure](https://github.com/natnaela-devops/devops-troubleshooting-runbooks/blob/main/runbooks/kubernetes/rke2-control-plane-resource-io-degradation.md).
+
 ### Kafka security migration
 
 Application traffic was migrated from legacy Kafka PLAINTEXT listeners to a parallel listener using **TLS with mandatory client certificates**. The rollout used per-broker certificates, per-application client identities, PKCS12/JKS stores, rolling broker changes, direct TLS validation, runtime Java/Spring/WildFly verification, consumer-group checks, and partition-level validation.
@@ -114,5 +123,6 @@ This repository documents engineering scope and methods without exposing custome
 - proprietary application source code or business data
 - exact production sizing and capacity values
 - uptime, transaction-volume, or performance claims that were not independently measured
+- definitive upstream root-cause claims when the available evidence proves only the failure mechanism
 
 The goal is to demonstrate practical DevOps/SRE work while respecting production confidentiality.
