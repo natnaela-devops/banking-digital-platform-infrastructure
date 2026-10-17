@@ -69,13 +69,14 @@ The exact placement and sizing differed between UAT and production. This diagram
 
 1. [Architecture and service relationships](docs/architecture.md)
 2. [CI/CD and GitOps delivery](docs/ci-cd-gitops.md)
-3. [UAT to production workflow](docs/uat-to-production.md)
-4. [Networking, Nginx, and TLS](docs/networking-nginx.md)
-5. [Identity and Keycloak](docs/identity-keycloak.md)
-6. [Messaging and cache: Kafka + Redis/Predixy](docs/messaging-cache.md)
-7. [Databases and storage](docs/databases-storage.md)
-8. [Observability and alerting](docs/observability.md)
-9. [Operations, troubleshooting, and recovery](docs/operations-recovery.md)
+3. [Where a GitOps deployment can fail](docs/delivery-failure-boundaries.md)
+4. [UAT to production workflow](docs/uat-to-production.md)
+5. [Networking, Nginx, and TLS](docs/networking-nginx.md)
+6. [Identity and Keycloak](docs/identity-keycloak.md)
+7. [Messaging and cache: Kafka + Redis/Predixy](docs/messaging-cache.md)
+8. [Databases and storage](docs/databases-storage.md)
+9. [Observability and alerting](docs/observability.md)
+10. [Operations, troubleshooting, and recovery](docs/operations-recovery.md)
 
 ## Selected operational examples
 
