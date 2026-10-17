@@ -1,10 +1,10 @@
 # Banking Digital Platform Infrastructure
 
-Sanitized case study of hands-on DevOps/SRE work across **UAT and production banking environments**. The platform combined Kubernetes and VM-hosted services for application delivery, identity, messaging, caching, databases, storage, observability, artifact management, secure edge routing, and GitOps-based delivery.
+These are my notes from supporting a banking platform across UAT and production. The environment mixed RKE2 workloads with VM-hosted services, so application issues often required checking Kubernetes, Linux, Kafka, Redis, databases and the network path together.
 
 > Customer names, internal IPs, domains, credentials, private certificates, cluster identifiers, proprietary application names, and production data are intentionally excluded. The architecture is generalized from real operational work rather than copied from a customer environment.
 
-## What this demonstrates
+## Systems I worked with
 
 - operating **RKE2 + Rancher** environments with Longhorn-backed workloads
 - implementing and troubleshooting **CI/CD + GitOps delivery** across application repositories, Docker builds, private Harbor registry, shared Helm charts, environment values, Argo CD ApplicationSets, and RKE2 rollouts
@@ -78,7 +78,7 @@ The exact placement and sizing differed between UAT and production. This diagram
 9. [Observability and alerting](docs/observability.md)
 10. [Operations, troubleshooting, and recovery](docs/operations-recovery.md)
 
-## Selected operational examples
+## Work and incidents
 
 ### CI/CD and GitOps deployment flow
 
@@ -112,7 +112,7 @@ Work included deployments, Services, ConfigMaps, Secrets, image pulls, Longhorn 
 
 Prometheus/Alertmanager and OpenSearch were used for infrastructure and application visibility. Operational work included alert validation, retention checks, disk/resource monitoring, application/platform log separation, and correlation of logs, metrics, runtime configuration, and direct protocol tests.
 
-## Change-management approach
+## How I approached changes
 
 A typical production change followed this pattern:
 
@@ -145,4 +145,4 @@ This repository documents engineering scope and methods without exposing custome
 - uptime, transaction-volume, or performance claims that were not independently measured
 - definitive upstream root-cause claims when the available evidence proves only the failure mechanism
 
-The goal is to demonstrate practical DevOps/SRE work while respecting production confidentiality.
+The details here are enough to explain my work, not to reconstruct a customer's environment.
